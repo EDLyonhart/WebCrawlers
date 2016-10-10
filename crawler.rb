@@ -1,11 +1,22 @@
+'''
+Author: EDLyonhart 
+  from tutorials:
+    https://www.youtube.com/watch?v=mMHflTR-MuY
+    https://www.youtube.com/watch?v=W_rEl19WIDg
+    https://www.youtube.com/watch?v=WOkysoDl6SA
+Date: 10 October 2016
+'''
+
 require 'mechanize'
 
 class WebCrawler
+  # Open and read 'file_name' (listed below)
   def initialize(file_name)
     @file = file_name
   end
 
   private
+  # use 'check' method to only add unique URLs to file
   def save_site_crawl(site_url)
     begin
       if check(site_url)
@@ -19,6 +30,7 @@ class WebCrawler
     end
   end
 
+  # confirm that url is/isn't present in @file
   def check(url)
     data = File.read(@file)
     urls = data.split
@@ -42,8 +54,10 @@ class WebCrawler
 
     agent.agent.http.verify_mode = OpenSSL::SSL::VERIFY_NONE
 
+    # get each url from file
     fetched_urls = fetch_database_urls()
 
+    # each line of imported file to check within
     fetched_urls.each do |url_to_crawl|
 
       begin
@@ -53,11 +67,14 @@ class WebCrawler
         links = page.links
 
         links.each do |link|
-
+          
+          # search for any 'href' value within returned 'link.attribute' xml object
           scraped_url = link.attributes['href']
 
+          # ignore if href=#
           next if scraped_url == "#"
 
+          # check for each opening case
           case scraped_url[0..4]
             when "https" then
               save_site_crawl(scraped_url)
@@ -69,11 +86,14 @@ class WebCrawler
               save_site_crawl(scraped_url)
               puts "Checking: #{scraped_url}\n---------------------------------------------\n"
             else
-            # example: /home.php
-            # http://site.com/link.php
+
             url_split = url_to_crawl.split("/")
 
+            p "url_split = #{url_split}"
+
+            # if scraped_url is a relative link (eg: '/home') do the following
             if scraped_url[0] == "/"
+              # example: url_split = [\"https:\", \"\", \"services.bostonglobe.com\", \"pwd\", \"reset.asp\"]
               final_url = url_split[0] + "//" + url_split[2] + scraped_url
             else
               final_url = url_split[0] + "//" + url_split[2] + "/" + scraped_url
