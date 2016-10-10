@@ -1,16 +1,28 @@
+'''
+Author: EDLyonhart 
+  from tutorials:
+    https://www.youtube.com/watch?v=mMHflTR-MuY
+    https://www.youtube.com/watch?v=W_rEl19WIDg
+    https://www.youtube.com/watch?v=WOkysoDl6SA
+Date: 10 October 2016
+
+This version of the crawler is looking for artists currently on display at given museums.
+'''
+
 require 'mechanize'
 
 class WebCrawler
-  def initialize(file_name)
-    @file = file_name
+  def initialize(read_file, write_file)
+    @museums = read_file
+    @artist_on_display = write_file
   end
 
   private
-  def save_site_crawl(site_url)
+  def save_artist_crawl(artist)
     begin
-      if check(site_url)
-        File.open(@file, "a") do |data|
-          data.puts site_url
+      if check(artist)
+        File.open(@artist_on_display, "a") do |data|
+          data.puts artist
         end
       end
 
@@ -19,10 +31,10 @@ class WebCrawler
     end
   end
 
-  def check(url)
-    data = File.read(@file)
-    urls = data.split
-    if urls.include? url
+  def check(artist)
+    data = File.read(@artist_on_display)
+    artists = data.split
+    if artists.include? artist
       return false
     else
       return true
@@ -30,7 +42,7 @@ class WebCrawler
   end
 
   def fetch_database_urls
-    active_urls = File.read(@file)
+    active_urls = File.read(@museums)
     urls = active_urls.split
     return urls
   end
@@ -62,8 +74,15 @@ class WebCrawler
               category == "../european" || 
               category == "../mixed-media"
 
-                # save_site_crawl(link.to_s)
-                p "- - - #{link.to_s}"
+              artist = link.to_s
+
+              if artist[-1] !~ /[[:alpha:]]/
+                p artist
+                artist = artist[0..-2]
+              end
+
+                save_artist_crawl(artist)
+                p "- - - #{artist}"
             end
 
             artists_found += 1
@@ -78,5 +97,5 @@ class WebCrawler
   end
 end
 
-crawler = WebCrawler.new('./museum_urls.txt')
+crawler = WebCrawler.new('./museum_urls.txt', './artists_on_display.txt')
 crawler.crawl
